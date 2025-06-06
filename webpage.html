@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Image Recognition with TensorFlow.js</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    text-align: center;
+    padding: 30px;
+  }
+  #preview {
+    max-width: 300px;
+    margin-top: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  }
+  #output {
+    margin-top: 20px;
+    font-size: 1.2em;
+    font-weight: bold;
+  }
+  input[type=file] {
+    margin-top: 20px;
+  }
+  button {
+    margin-top: 15px;
+    background: #fff;
+    color: #764ba2;
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>AI Image Recognition</h1>
+<input type="file" id="imageInput" accept="image/*" />
+<br />
+<img id="preview" src="#" alt="Image Preview" style="display:none;" />
+<br />
+<button onclick="recognizeImage()">Recognize Image</button>
+
+<div id="output"></div>
+
+<!-- TensorFlow.js library -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.12.0/dist/tf.min.js"></script>
+<!-- MobileNet model -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+
+<script>
+  let net;
+
+  // Load MobileNet model on page load
+  async function loadModel() {
+    document.getElementById('output').innerText = 'Loading AI model...';
+    net = await mobilenet.load();
+    document.getElementById('output').innerText = 'Model loaded. Upload an image.';
+  }
+  loadModel();
+
+  // Show image preview when user uploads
+  document.getElementById('imageInput').addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const preview = document.getElementById('preview');
+    preview.src = URL.createObjectURL(file);
+    preview.style.display = 'block';
+    document.getElementById('output').innerText = '';
+  });
+
+  async function recognizeImage() {
+    const preview = document.getElementById('preview');
+    const output = document.getElementById('output');
+
+    if (!preview.src || preview.style.display === 'none') {
+      alert('Please upload an image first!');
+      return;
+    }
+
+    output.innerText = 'Analyzing image...';
+
+    // Classify the image using MobileNet
+    const results = await net.classify(preview);
+
+    // Show top 3 predictions
+    output.innerHTML = 'Predictions:<br>';
+    results.slice(0, 3).forEach(pred => {
+      output.innerHTML += `${pred.className} — ${(pred.probability * 100).toFixed(2)}%<br>`;
+    });
+  }
+</script>
+
+</body>
+</html>
